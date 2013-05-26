@@ -85,17 +85,6 @@ function setupDirs(appJsRoot, appJsLibRoot, testRoot, confFile) {
     EnvJasmine.configFile = confFile;
 };
 
-EnvJasmine.SEPARATOR = (function (env) {
-    if (env == "UNIX") {
-        return "/";
-    } else if  (env == "WIN") {
-        return "\\";
-    } else {
-        print("no separator set");
-        return "/";
-    }
-}(EnvJasmine.environment));
-
 EnvJasmine.disableColor = (function (env) {
     return EnvJasmine.disableColorOverride || (env == "WIN");
 }(EnvJasmine.environment));
@@ -172,13 +161,16 @@ function runTests(appJsRoot, appJsLibRoot, testRoot, confFile, envHtml) {
             // TODO: allow 'inline' loading when AMD disabled
             // fileIn = new FileReader(EnvJasmine.specFile);
             // EnvJasmine.cx.evaluateReader(EnvJasmine.currentScope, fileIn, EnvJasmine.specs[i], 0, null);
-            var specLoader = 'require(["' + EnvJasmine.specFile + '"]);';
-            EnvJasmine.cx.evaluateString(EnvJasmine.currentScope, specLoader, 'Loading '+EnvJasmine.specFile, 0, null);
+			var pathToSpecFile = EnvJasmine.specFile.toString().replaceAll("\\\\", "/");
+            var specLoader = 'require(["' + pathToSpecFile + '"]);';
+            EnvJasmine.cx.evaluateString(EnvJasmine.currentScope, specLoader, 'Loading '+pathToSpecFile, 0, null);
             print("running the jasmine tests");
-            var windowLoader = 'window.location.assign(["file://", "'+envHtml+'"].join(EnvJasmine.SEPARATOR));';
-            EnvJasmine.cx.evaluateString(EnvJasmine.currentScope, windowLoader, 'Executing '+EnvJasmine.specs[i], 0, null);
+			var pathToEnvHtml = envHtml.split("\\").join("/");
+            var windowLoader = 'window.location.assign(["file://", "'+pathToEnvHtml+'"].join("/"));';
+            EnvJasmine.cx.evaluateString(EnvJasmine.currentScope, windowLoader, 'Executing '+pathToSpecFile, 0, null);
         } catch (e) {
             print('error running jasmine test: ' + EnvJasmine.specs[i] + "\n error was: " + e );
+			print(e.stack);
         }
         finally {
             if (fileIn) {
