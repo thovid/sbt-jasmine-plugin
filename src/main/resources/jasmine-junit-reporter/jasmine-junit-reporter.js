@@ -127,11 +127,11 @@
                     output += "\n<testsuites>";
                     output += this.getNestedOutput(suite);
                     output += "\n</testsuites>";
-                    this.writeFile(this.savePath + fileName, output);
+                    this.writeFile(this.savePath, fileName, output);
                 }
                 else {
                     output += suite.output;
-                    this.writeFile(this.savePath + fileName, output);
+                    this.writeFile(this.savePath, fileName, output);
                 }
             }
             // When all done, make it known on JUnitXmlReporter
@@ -146,23 +146,30 @@
             return output;
         },
 
-        writeFile: function(filename, text) {
-            // Rhino
+        writeFile: function(path, filename, text) {
+            var fullQuallifiedFilename = path + filename;
+			// Rhino
             try {
-                var out = new java.io.BufferedWriter(new java.io.FileWriter(filename));
+				// create 
+				var pathFile = new java.io.File(path);
+				if(!pathFile.exists()) {
+					pathFile.mkdirs();
+				}
+				
+				var out = new java.io.BufferedWriter(new java.io.FileWriter(fullQuallifiedFilename));
                 out.write(text);
                 out.close();
                 return;
             } catch (e) {}
             // PhantomJS, via a method injected by phantomjs-testrunner.js
             try {
-                __phantom_writeFile(filename, text);
+                __phantom_writeFile(fullQuallifiedFilename, text);
                 return;
             } catch (f) {}
             // Node.js
             try {
                 var fs = require("fs");
-                var fd = fs.openSync(filename, "w");
+                var fd = fs.openSync(fullQuallifiedFilename, "w");
                 fs.writeSync(fd, text, 0);
                 fs.closeSync(fd);
                 return;
